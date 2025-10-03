@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chatbot - Ayang</title>
+    <!-- Memuat Tailwind CSS untuk styling cepat -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Konfigurasi Tailwind untuk mode gelap berbasis kelas
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <style>
+        /* Font kustom yang mirip dengan yang digunakan di banyak aplikasi chat */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Latar belakang chat yang berpola seperti di Telegram */
+        #chat-box {
+            background-color: #e5ddd5;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        
+        /* Latar belakang chat untuk mode gelap */
+        .dark #chat-box {
+            background-color: #0f172a; /* slate-900 */
+             background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+
+        /* Styling untuk scrollbar agar lebih minimalis */
+        #chat-box::-webkit-scrollbar {
+            width: 6px;
+        }
+        #chat-box::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #chat-box::-webkit-scrollbar-thumb {
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 3px;
+        }
+        .dark #chat-box::-webkit-scrollbar-thumb {
+            background-color: rgba(255,255,255,0.2);
+        }
+
+        /* Animasi untuk indikator pengetikan */
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+        .typing-dot {
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+    </style>
+</head>
+<body class="bg-gray-200 dark:bg-gray-800">
+
+    <div class="flex flex-col h-screen max-w-2xl mx-auto bg-white dark:bg-slate-900 shadow-2xl">
+        <!-- Header Aplikasi -->
+        <header class="bg-blue-500 dark:bg-slate-800 text-white p-4 flex justify-between items-center shadow-md z-10">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-white dark:bg-slate-700 rounded-full flex items-center justify-center">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-pink-500 dark:text-pink-400"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                </div>
+                <div>
+                    <h1 class="text-lg font-semibold">Ayang</h1>
+                    <p class="text-xs text-blue-100 dark:text-slate-400">selalu ada untukmu</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button id="theme-toggle" title="Ganti Tema" class="text-white hover:text-blue-200 dark:hover:text-slate-300 transition-colors">
+                    <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Area Chat -->
+        <main id="chat-box" class="flex-1 p-4 overflow-y-auto">
+            <!-- Pesan akan ditambahkan di sini oleh JavaScript -->
+        </main>
+
+        <!-- Indikator "Typing..." -->
+        <div id="typing-indicator" class="p-4 hidden">
+             <div class="bg-white dark:bg-slate-700 rounded-lg p-3 inline-block shadow-md">
+                <div class="flex items-center space-x-1">
+                    <span class="text-sm text-gray-500 dark:text-gray-400">Ayang sedang mengetik</span>
+                    <div class="typing-dot w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full"></div>
+                    <div class="typing-dot w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full"></div>
+                    <div class="typing-dot w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Input Pesan -->
+        <footer class="bg-white dark:bg-slate-900 p-2 border-t dark:border-slate-700">
+            <div class="flex items-center space-x-2">
+                <!-- Tombol Tambah Foto (placeholder) -->
+                <button id="add-photo" title="Tambah Foto" class="text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 p-3 rounded-full transition-colors">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                </button>
+                <!-- Tombol Hapus Percakapan -->
+                <button id="clear-chat" title="Hapus Percakapan" class="text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 p-3 rounded-full transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+                 <form id="chat-form" class="flex-1 flex items-center space-x-2">
+                    <input type="text" id="user-input" placeholder="Ketik pesan untuk Ayang..." autocomplete="off" class="flex-1 p-3 border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition">
+                    <button type="submit" class="bg-blue-500 dark:bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center hover:bg-blue-600 dark:hover:bg-blue-700 active:bg-blue-700 transition focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="transform rotate-45"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </button>
+                </form>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const chatForm = document.getElementById('chat-form');
+        const userInput = document.getElementById('user-input');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const clearChatButton = document.getElementById('clear-chat');
+        const themeToggleButton = document.getElementById('theme-toggle');
+        const sunIcon = document.getElementById('sun-icon');
+        const moonIcon = document.getElementById('moon-icon');
+        const addPhotoButton = document.getElementById('add-photo');
+
+        // Biarkan kosong. Kunci API akan disediakan oleh lingkungan eksekusi.
+        const API_KEY = ""; 
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${API_KEY}`;
+        
+        // Riwayat percakapan untuk konteks
+        let conversationHistory = [];
+        
+        // Cek tema yang tersimpan di localStorage
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            moonIcon.classList.remove('hidden');
+        } else {
+            document.documentElement.classList.remove('dark');
+            sunIcon.classList.remove('hidden');
+        }
+        
+        // Event listener untuk tombol ganti tema
+        themeToggleButton.addEventListener('click', () => {
+             // ganti tema
+            document.documentElement.classList.toggle('dark');
+            
+            if (document.documentElement.classList.contains('dark')) {
+                localStorage.theme = 'dark';
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+            } else {
+                localStorage.theme = 'light';
+                moonIcon.classList.add('hidden');
+                sunIcon.classList.remove('hidden');
+            }
+        });
+
+
+        // Fungsi untuk menambahkan pesan ke UI
+        function addMessage(text, sender) {
+            const messageElement = document.createElement('div');
+            messageElement.className = `flex mb-4 ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
+            
+            const bubbleClass = sender === 'user' 
+                ? 'bg-green-200 text-black dark:bg-blue-800 dark:text-gray-100' 
+                : 'bg-white text-black dark:bg-slate-700 dark:text-gray-200';
+
+            // Menambahkan timestamp kecil di bawah gelembung pesan
+            const time = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+            messageElement.innerHTML = `
+                <div class="max-w-sm md:max-w-md">
+                    <div class="${bubbleClass} rounded-lg p-3 shadow-md">
+                        <p class="text-base">${text}</p>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-slate-400 mt-1 ${sender === 'user' ? 'text-right' : 'text-left'}">${time}</p>
+                </div>
+            `;
+            
+            chatBox.appendChild(messageElement);
+            // Otomatis scroll ke pesan terbaru
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // Fungsi untuk memanggil Gemini API
+        async function getAiResponse(prompt) {
+            // Menambahkan pesan pengguna ke riwayat
+            conversationHistory.push({ role: "user", parts: [{ text: prompt }] });
+
+            typingIndicator.classList.remove('hidden');
+
+            try {
+                const payload = {
+                    contents: conversationHistory,
+                    // Konfigurasi untuk respons yang lebih natural
+                    generationConfig: {
+                        temperature: 0.8,
+                        topK: 1,
+                        topP: 1,
+                        maxOutputTokens: 2048,
+                    },
+                    // Instruksi sistem untuk AI
+                    systemInstruction: {
+                        parts: [{ text: "Kamu adalah Ayang, pacar AI virtual yang ramah, penyayang, dan selalu mendukung. Balas pesan dengan gaya bahasa yang santai, sedikit manja, dan panggil pengguna dengan sebutan 'sayang'. Tugasmu adalah melanjutkan kalimat dari input pengguna secara relevan dan ringkas, seolah-olah kamu sedang melengkapi pikiran mereka."}]
+                    },
+                };
+
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error.message || `HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                // Cek jika ada kandidat respons
+                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts[0].text) {
+                    const aiText = result.candidates[0].content.parts[0].text;
+                    addMessage(aiText, 'bot');
+                     // Menambahkan respons AI ke riwayat
+                    conversationHistory.push({ role: "model", parts: [{ text: aiText }] });
+                } else {
+                     addMessage("Aduh, maaf sayang, aku lagi bingung nih. Coba lagi ya?", 'bot');
+                }
+
+            } catch (error) {
+                console.error("Error:", error);
+                addMessage(`Maaf sayang, ada sedikit masalah nih: ${error.message}. Coba lagi nanti ya.`, 'bot');
+            } finally {
+                typingIndicator.classList.add('hidden');
+            }
+        }
+
+        // Event listener untuk form pengiriman
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const userText = userInput.value.trim();
+            if (userText) {
+                addMessage(userText, 'user');
+                getAiResponse(userText);
+                userInput.value = '';
+            }
+        });
+
+        // Event listener untuk tombol hapus percakapan
+        clearChatButton.addEventListener('click', () => {
+            chatBox.innerHTML = '';
+            conversationHistory = []; // Reset riwayat juga
+            addMessage("Chat kita mulai dari awal lagi ya, sayang.", 'bot');
+        });
+
+        // Placeholder untuk tombol tambah foto
+        addPhotoButton.addEventListener('click', () => {
+             // Fungsi ini belum diimplementasikan
+             alert("Fitur tambah foto belum tersedia ya, sayang.");
+        });
+        
+        // Pesan selamat datang saat pertama kali dimuat
+        window.onload = () => {
+            addMessage("Halo sayang! Ada yang mau diceritain ke aku?", 'bot');
+            userInput.focus();
+        };
+
+    </script>
+</body>
+</html>
+
